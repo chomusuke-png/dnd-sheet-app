@@ -9,10 +9,11 @@ import { Dnd5eService } from '../../core/services/dnd5e.service';
 import { CharacterStatsService, AbilityModifiers } from '../../core/services/character-stats.service';
 import { Character } from '../../shared/models/character.model';
 import { Dnd5eListEntry, RaceData, ClassData } from '../../shared/models/dnd5e.model';
+import { SkillsComponent } from './sections/skills/skills.component';
 
 @Component({
   selector: 'app-character-sheet',
-  imports: [ReactiveFormsModule, TitleCasePipe, RouterLink],
+  imports: [ReactiveFormsModule, TitleCasePipe, RouterLink, SkillsComponent],
   templateUrl: './character-sheet.component.html',
   styleUrl: './character-sheet.component.css'
 })
@@ -113,6 +114,8 @@ export class CharacterSheetComponent implements OnInit, OnDestroy {
     'strength', 'dexterity', 'constitution',
     'intelligence', 'wisdom', 'charisma'
   ] as const;
+
+  protected readonly skillProficiencies = signal<string[]>([]);
 
   ngOnInit(): void {
     this.loadDropdowns();
@@ -261,5 +264,9 @@ export class CharacterSheetComponent implements OnInit, OnDestroy {
 
   protected get isEditing(): boolean {
     return this.characterId() !== null;
+  }
+
+  protected onSkillProficienciesChange(proficiencies: string[]): void {
+    this.skillProficiencies.set(proficiencies);
   }
 }

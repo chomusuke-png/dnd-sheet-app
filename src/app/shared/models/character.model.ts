@@ -33,6 +33,8 @@ export interface Character {
   bonds: string;
   flaws: string;
   backstory: string;
+
+  skill_proficiencies: string;
 }
 
 export type CreateCharacterRequest = Omit<Character, 'id' | 'created_at' | 'updated_at'>;

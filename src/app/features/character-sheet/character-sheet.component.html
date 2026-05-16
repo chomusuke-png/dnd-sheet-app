@@ -151,6 +151,20 @@
       </section>
     }
 
+    <!-- Skills -->
+    @if (selectedClassData()) {
+      <section class="sheet-section">
+        <h2>Habilidades</h2>
+        <app-skills
+          [modifiers]="modifiers()"
+          [proficiencyBonus]="proficiencyBonus()"
+          [classData]="selectedClassData()"
+          [selectedProficiencies]="skillProficiencies()"
+          (proficienciesChange)="onSkillProficienciesChange($event)"
+        />
+      </section>
+    }
+
     <!-- Backstory -->
     <section class="sheet-section">
       <h2>Historia</h2>

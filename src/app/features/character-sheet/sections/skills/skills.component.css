@@ -1,0 +1,76 @@
+.skills__hint {
+    font-size: 0.8rem;
+    color: var(--color-primary);
+    margin-bottom: 0.75rem;
+}
+
+.skills__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.skill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.15s;
+    border: 1px solid transparent;
+}
+
+.skill:hover {
+    background-color: var(--color-surface-alt);
+}
+
+.skill--proficient {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-alt);
+}
+
+.skill--unavailable {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.skill--unavailable:hover {
+    background-color: transparent;
+}
+
+.skill__indicator {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    width: 12px;
+    flex-shrink: 0;
+}
+
+.skill--proficient .skill__indicator {
+    color: var(--color-primary);
+}
+
+.skill__value {
+    font-weight: 700;
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.skill__name {
+    flex: 1;
+    color: var(--color-text-muted);
+}
+
+.skill--proficient .skill__name {
+    color: var(--color-text);
+}
+
+.skill__ability {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+}

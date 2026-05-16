@@ -1,0 +1,27 @@
+<div class="skills">
+  @if (maxProficiencies() > 0) {
+    <p class="skills__hint">
+      Selecciona {{ maxProficiencies() }} habilidades
+      ({{ selectedProficiencies().length }}/{{ maxProficiencies() }})
+    </p>
+  }
+
+  <ul class="skills__list">
+    @for (skill of skills; track skill.index) {
+      @let proficient = isProficient(skill.index);
+      @let available = isAvailable(skill.index);
+
+      <li
+        class="skill"
+        [class.skill--proficient]="proficient"
+        [class.skill--unavailable]="!available"
+        (click)="toggleProficiency(skill.index)"
+      >
+        <span class="skill__indicator">{{ proficient ? '●' : '○' }}</span>
+        <span class="skill__value">{{ formatModifier(getSkillValue(skill)) }}</span>
+        <span class="skill__name">{{ skill.name }}</span>
+        <span class="skill__ability">{{ skill.abilityIndex | uppercase | slice:0:3 }}</span>
+      </li>
+    }
+  </ul>
+</div>

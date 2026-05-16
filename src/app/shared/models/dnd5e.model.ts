@@ -28,4 +28,10 @@ export interface ClassData {
   hit_die: number;
   saving_throws: { index: string }[];
   spellcasting_ability: string;
+  proficiency_choices: ProficiencyChoice[];
+}
+
+export interface ProficiencyChoice {
+  choose: number;
+  from: Dnd5eListEntry[];
 }
