@@ -1,0 +1,183 @@
+<div class="character-sheet">
+  <header class="character-sheet__header">
+    <a routerLink="/characters" class="back-link">← Mis Personajes</a>
+    <h1>{{ isEditing ? 'Editar Personaje' : 'Nuevo Personaje' }}</h1>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Cargando personaje...</p>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+
+    <!-- Info básica -->
+    <section class="sheet-section">
+      <h2>Información Básica</h2>
+      <div class="field-group">
+        <label for="name">Nombre</label>
+        <input id="name" type="text" formControlName="name" />
+
+        <label for="race">Raza</label>
+        <select id="race" formControlName="race">
+          <option value="">Selecciona una raza...</option>
+          @for (race of races(); track race.index) {
+            <option [value]="race.index">{{ race.name }}</option>
+          }
+        </select>
+
+        <label for="class">Clase</label>
+        <select id="class" formControlName="class">
+          <option value="">Selecciona una clase...</option>
+          @for (cls of classes(); track cls.index) {
+            <option [value]="cls.index">{{ cls.name }}</option>
+          }
+        </select>
+
+        <label for="background">Trasfondo</label>
+        <input id="background" type="text" formControlName="background" />
+
+        <label for="alignment">Alineamiento</label>
+        <input id="alignment" type="text" formControlName="alignment" />
+
+        <label for="level">Nivel</label>
+        <input id="level" type="number" formControlName="level" min="1" max="20" />
+
+        <label for="experience_points">Experiencia</label>
+        <input id="experience_points" type="number" formControlName="experience_points" />
+      </div>
+    </section>
+
+    <!-- Stats calculadas -->
+    <section class="sheet-section">
+      <h2>Stats</h2>
+      <div class="computed-stats">
+        <div class="stat-chip">
+          <span class="stat-chip__label">Bono de Competencia</span>
+          <span class="stat-chip__value">{{ formatModifier(proficiencyBonus()) }}</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip__label">Iniciativa</span>
+          <span class="stat-chip__value">{{ formatModifier(initiative()) }}</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip__label">Percepción Pasiva</span>
+          <span class="stat-chip__value">{{ passivePerception() }}</span>
+        </div>
+        @if (spellSaveDC()) {
+          <div class="stat-chip">
+            <span class="stat-chip__label">CD de Conjuro</span>
+            <span class="stat-chip__value">{{ spellSaveDC() }}</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-chip__label">Ataque de Conjuro</span>
+            <span class="stat-chip__value">{{ formatModifier(spellAttackBonus()!) }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Ability scores -->
+    <section class="sheet-section">
+      <h2>Características</h2>
+      <div class="ability-scores">
+        @for (ability of abilityNames; track ability) {
+          <div class="ability-score">
+            <span class="ability-score__label">{{ ability | titlecase }}</span>
+            <span class="ability-score__modifier">
+              {{ formatModifier(modifiers()[ability]) }}
+            </span>
+            <input
+              [id]="ability"
+              type="number"
+              [formControlName]="ability"
+              min="1"
+              max="30"
+            />
+            @if (selectedRaceData()) {
+              @for (bonus of selectedRaceData()!.ability_bonuses; track bonus.ability_index) {
+                @if (bonus.ability_index === ability) {
+                  <span class="ability-score__bonus">+{{ bonus.bonus }} raza</span>
+                }
+              }
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Combat -->
+    <section class="sheet-section">
+      <h2>Combate</h2>
+      <div class="field-group">
+        <label for="max_hit_points">HP Máximo</label>
+        <input id="max_hit_points" type="number" formControlName="max_hit_points" />
+
+        <label for="current_hit_points">HP Actual</label>
+        <input id="current_hit_points" type="number" formControlName="current_hit_points" />
+
+        <label for="temporary_hit_points">HP Temporal</label>
+        <input id="temporary_hit_points" type="number" formControlName="temporary_hit_points" />
+
+        <label for="armor_class">Clase de Armadura</label>
+        <input id="armor_class" type="number" formControlName="armor_class" />
+
+        <label for="speed">Velocidad</label>
+        <input id="speed" type="number" formControlName="speed" readonly />
+
+        <label for="hit_dice">Dado de Golpe</label>
+        <input id="hit_dice" type="text" formControlName="hit_dice" readonly />
+      </div>
+    </section>
+
+    <!-- Saving throws -->
+    @if (selectedClassData()) {
+      <section class="sheet-section">
+        <h2>Tiradas de Salvación</h2>
+        <div class="saving-throws">
+          @for (ability of abilityNames; track ability) {
+            @let isProficient = selectedClassData()!.saving_throws.some(st => st.index === ability);
+            @let modifier = modifiers()[ability] + (isProficient ? proficiencyBonus() : 0);
+            <div class="saving-throw" [class.saving-throw--proficient]="isProficient">
+              <span class="saving-throw__indicator">{{ isProficient ? '●' : '○' }}</span>
+              <span class="saving-throw__name">{{ ability | titlecase }}</span>
+              <span class="saving-throw__value">{{ formatModifier(modifier) }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Backstory -->
+    <section class="sheet-section">
+      <h2>Historia</h2>
+      <div class="field-group field-group--full">
+        <label for="personality_traits">Rasgos de Personalidad</label>
+        <textarea id="personality_traits" formControlName="personality_traits" rows="3"></textarea>
+
+        <label for="ideals">Ideales</label>
+        <textarea id="ideals" formControlName="ideals" rows="3"></textarea>
+
+        <label for="bonds">Vínculos</label>
+        <textarea id="bonds" formControlName="bonds" rows="3"></textarea>
+
+        <label for="flaws">Defectos</label>
+        <textarea id="flaws" formControlName="flaws" rows="3"></textarea>
+
+        <label for="backstory">Historia</label>
+        <textarea id="backstory" formControlName="backstory" rows="6"></textarea>
+      </div>
+    </section>
+
+    <div class="character-sheet__actions">
+      <a routerLink="/characters" class="button button--secondary">Cancelar</a>
+      <button type="submit" class="button button--primary" [disabled]="isSaving()">
+        {{ isSaving() ? 'Guardando...' : 'Guardar Personaje' }}
+      </button>
+    </div>
+
+  </form>
+</div>

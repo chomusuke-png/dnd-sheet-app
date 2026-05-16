@@ -1,0 +1,30 @@
+<div class="character-list">
+  <header class="character-list__header">
+    <h1>Mis Personajes</h1>
+    <a routerLink="/characters/new" class="button button--primary">+ Nuevo Personaje</a>
+  </header>
+
+  @if (isLoading()) {
+    <p>Cargando personajes...</p>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (!isLoading() && characters().length === 0) {
+    <p>No tienes personajes aún. ¡Crea uno!</p>
+  }
+
+  <ul class="character-list__grid">
+    @for (character of characters(); track character.id) {
+      <li class="character-card">
+        <a routerLink="/characters/{{ character.id }}">
+          <h2>{{ character.name }}</h2>
+          <p>{{ character.race }} · {{ character.class }}</p>
+          <p>Nivel {{ character.level }}</p>
+        </a>
+      </li>
+    }
+  </ul>
+</div>
