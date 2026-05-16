@@ -117,6 +117,12 @@ export class CharacterSheetComponent implements OnInit, OnDestroy {
 
   protected readonly skillProficiencies = signal<string[]>([]);
 
+  protected readonly activeTab = signal<'info' | 'combat' | 'skills' | 'backstory'>('info');
+
+  protected setTab(tab: 'info' | 'combat' | 'skills' | 'backstory'): void {
+    this.activeTab.set(tab);
+  }
+
   ngOnInit(): void {
     this.loadDropdowns();
     this.watchFormChanges();

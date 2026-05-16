@@ -5,7 +5,7 @@
   </header>
 
   @if (isLoading()) {
-    <p>Cargando personajes...</p>
+    <p class="empty-state">Cargando...</p>
   }
 
   @if (error()) {
@@ -13,7 +13,7 @@
   }
 
   @if (!isLoading() && characters().length === 0) {
-    <p>No tienes personajes aún. ¡Crea uno!</p>
+    <p class="empty-state">No hay personajes. Crea uno.</p>
   }
 
   <ul class="character-list__grid">
@@ -21,8 +21,8 @@
       <li class="character-card">
         <a routerLink="/characters/{{ character.id }}">
           <h2>{{ character.name }}</h2>
-          <p>{{ character.race }} · {{ character.class }}</p>
-          <p>Nivel {{ character.level }}</p>
+          <p class="character-card__meta">{{ character.race }} · {{ character.class }}</p>
+          <p class="character-card__level">LVL {{ character.level }}</p>
         </a>
       </li>
     }

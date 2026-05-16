@@ -1,195 +1,296 @@
 <div class="character-sheet">
-  <header class="character-sheet__header">
-    <a routerLink="/characters" class="back-link">← Mis Personajes</a>
-    <h1>{{ isEditing ? 'Editar Personaje' : 'Nuevo Personaje' }}</h1>
+
+  <header class="sheet-topbar">
+    <a routerLink="/characters" class="back-link">◂ Roster</a>
+    <span class="sheet-title">
+      {{ form.get('name')?.value || (isEditing ? 'Personaje' : 'Nuevo Personaje') }}
+    </span>
+    @if (form.get('level')?.value) {
+      <span class="sheet-badge">LVL {{ form.get('level')?.value }}</span>
+    }
+    @if (form.get('race')?.value && form.get('class')?.value) {
+      <span class="sheet-meta">{{ form.get('race')?.value }} · {{ form.get('class')?.value }}</span>
+    }
   </header>
 
+  <nav class="sheet-tabs">
+    <button class="sheet-tab" [class.active]="activeTab() === 'info'" (click)="setTab('info')">
+      <i class="ti ti-user" aria-hidden="true"></i> Info
+    </button>
+    <button class="sheet-tab" [class.active]="activeTab() === 'combat'" (click)="setTab('combat')">
+      <i class="ti ti-sword" aria-hidden="true"></i> Combat
+    </button>
+    <button class="sheet-tab" [class.active]="activeTab() === 'skills'" (click)="setTab('skills')">
+      <i class="ti ti-list-check" aria-hidden="true"></i> Skills
+    </button>
+    <button class="sheet-tab" [class.active]="activeTab() === 'backstory'" (click)="setTab('backstory')">
+      <i class="ti ti-book" aria-hidden="true"></i> Backstory
+    </button>
+  </nav>
+
   @if (isLoading()) {
-    <p class="loading">Cargando personaje...</p>
+    <p class="status-msg">▸ Cargando personaje...</p>
   }
 
   @if (error()) {
-    <p class="error">{{ error() }}</p>
+    <p class="error" style="padding: 8px 20px;">{{ error() }}</p>
   }
 
   <form [formGroup]="form" (ngSubmit)="save()">
 
-    <!-- Info básica -->
-    <section class="sheet-section">
-      <h2>Información Básica</h2>
-      <div class="field-group">
-        <label for="name">Nombre</label>
-        <input id="name" type="text" formControlName="name" />
+    <!-- TAB: INFO -->
+    @if (activeTab() === 'info') {
+      <div class="sheet-body">
 
-        <label for="race">Raza</label>
-        <select id="race" formControlName="race">
-          <option value="">Selecciona una raza...</option>
-          @for (race of races(); track race.index) {
-            <option [value]="race.index">{{ race.name }}</option>
-          }
-        </select>
-
-        <label for="class">Clase</label>
-        <select id="class" formControlName="class">
-          <option value="">Selecciona una clase...</option>
-          @for (cls of classes(); track cls.index) {
-            <option [value]="cls.index">{{ cls.name }}</option>
-          }
-        </select>
-
-        <label for="background">Trasfondo</label>
-        <input id="background" type="text" formControlName="background" />
-
-        <label for="alignment">Alineamiento</label>
-        <input id="alignment" type="text" formControlName="alignment" />
-
-        <label for="level">Nivel</label>
-        <input id="level" type="number" formControlName="level" min="1" max="20" />
-
-        <label for="experience_points">Experiencia</label>
-        <input id="experience_points" type="number" formControlName="experience_points" />
-      </div>
-    </section>
-
-    <!-- Stats calculadas -->
-    <section class="sheet-section">
-      <h2>Stats</h2>
-      <div class="computed-stats">
-        <div class="stat-chip">
-          <span class="stat-chip__label">Bono de Competencia</span>
-          <span class="stat-chip__value">{{ formatModifier(proficiencyBonus()) }}</span>
-        </div>
-        <div class="stat-chip">
-          <span class="stat-chip__label">Iniciativa</span>
-          <span class="stat-chip__value">{{ formatModifier(initiative()) }}</span>
-        </div>
-        <div class="stat-chip">
-          <span class="stat-chip__label">Percepción Pasiva</span>
-          <span class="stat-chip__value">{{ passivePerception() }}</span>
-        </div>
-        @if (spellSaveDC()) {
-          <div class="stat-chip">
-            <span class="stat-chip__label">CD de Conjuro</span>
-            <span class="stat-chip__value">{{ spellSaveDC() }}</span>
-          </div>
-          <div class="stat-chip">
-            <span class="stat-chip__label">Ataque de Conjuro</span>
-            <span class="stat-chip__value">{{ formatModifier(spellAttackBonus()!) }}</span>
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- Ability scores -->
-    <section class="sheet-section">
-      <h2>Características</h2>
-      <div class="ability-scores">
-        @for (ability of abilityNames; track ability) {
-          <div class="ability-score">
-            <span class="ability-score__label">{{ ability | titlecase }}</span>
-            <span class="ability-score__modifier">
-              {{ formatModifier(modifiers()[ability]) }}
-            </span>
-            <input
-              [id]="ability"
-              type="number"
-              [formControlName]="ability"
-              min="1"
-              max="30"
-            />
-            @if (selectedRaceData()) {
-              @for (bonus of selectedRaceData()!.ability_bonuses; track bonus.ability_index) {
-                @if (bonus.ability_index === ability) {
-                  <span class="ability-score__bonus">+{{ bonus.bonus }} raza</span>
-                }
-              }
-            }
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- Combat -->
-    <section class="sheet-section">
-      <h2>Combate</h2>
-      <div class="field-group">
-        <label for="max_hit_points">HP Máximo</label>
-        <input id="max_hit_points" type="number" formControlName="max_hit_points" />
-
-        <label for="current_hit_points">HP Actual</label>
-        <input id="current_hit_points" type="number" formControlName="current_hit_points" />
-
-        <label for="temporary_hit_points">HP Temporal</label>
-        <input id="temporary_hit_points" type="number" formControlName="temporary_hit_points" />
-
-        <label for="armor_class">Clase de Armadura</label>
-        <input id="armor_class" type="number" formControlName="armor_class" />
-
-        <label for="speed">Velocidad</label>
-        <input id="speed" type="number" formControlName="speed" readonly />
-
-        <label for="hit_dice">Dado de Golpe</label>
-        <input id="hit_dice" type="text" formControlName="hit_dice" readonly />
-      </div>
-    </section>
-
-    <!-- Saving throws -->
-    @if (selectedClassData()) {
-      <section class="sheet-section">
-        <h2>Tiradas de Salvación</h2>
-        <div class="saving-throws">
-          @for (ability of abilityNames; track ability) {
-            @let isProficient = selectedClassData()!.saving_throws.some(st => st.index === ability);
-            @let modifier = modifiers()[ability] + (isProficient ? proficiencyBonus() : 0);
-            <div class="saving-throw" [class.saving-throw--proficient]="isProficient">
-              <span class="saving-throw__indicator">{{ isProficient ? '●' : '○' }}</span>
-              <span class="saving-throw__name">{{ ability | titlecase }}</span>
-              <span class="saving-throw__value">{{ formatModifier(modifier) }}</span>
+        <div class="panel">
+          <div class="panel-label">Información básica</div>
+          <div class="panel-body">
+            <div class="field-row">
+              <span class="field-label">Nombre</span>
+              <input type="text" formControlName="name" />
             </div>
-          }
+            <div class="field-row">
+              <span class="field-label">Raza</span>
+              <select formControlName="race">
+                <option value="">— seleccionar —</option>
+                @for (race of races(); track race.index) {
+                  <option [value]="race.index">{{ race.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Clase</span>
+              <select formControlName="class">
+                <option value="">— seleccionar —</option>
+                @for (cls of classes(); track cls.index) {
+                  <option [value]="cls.index">{{ cls.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Trasfondo</span>
+              <input type="text" formControlName="background" />
+            </div>
+            <div class="field-row">
+              <span class="field-label">Alineamiento</span>
+              <input type="text" formControlName="alignment" />
+            </div>
+            <div class="field-row">
+              <span class="field-label">Nivel</span>
+              <input type="number" formControlName="level" min="1" max="20" />
+            </div>
+            <div class="field-row">
+              <span class="field-label">Experiencia</span>
+              <input type="number" formControlName="experience_points" />
+            </div>
+          </div>
         </div>
-      </section>
-    }
 
-    <!-- Skills -->
-    @if (selectedClassData()) {
-      <section class="sheet-section">
-        <h2>Habilidades</h2>
-        <app-skills
-          [modifiers]="modifiers()"
-          [proficiencyBonus]="proficiencyBonus()"
-          [classData]="selectedClassData()"
-          [selectedProficiencies]="skillProficiencies()"
-          (proficienciesChange)="onSkillProficienciesChange($event)"
-        />
-      </section>
-    }
+        <div class="panel">
+          <div class="panel-label">Características</div>
+          <div class="panel-body">
+            <div class="ability-grid">
+              @for (ability of abilityNames; track ability) {
+                <div class="ability-cell">
+                  <div class="ability-name">{{ ability.slice(0,3).toUpperCase() }}</div>
+                  <div class="ability-mod">{{ formatModifier(modifiers()[ability]) }}</div>
+                  <input
+                    [id]="ability"
+                    type="number"
+                    [formControlName]="ability"
+                    min="1"
+                    max="30"
+                  />
+                  @if (selectedRaceData()) {
+                    @for (bonus of selectedRaceData()!.ability_bonuses; track bonus.ability_index) {
+                      @if (bonus.ability_index === ability) {
+                        <div class="ability-race-bonus">+{{ bonus.bonus }} raza</div>
+                      }
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
 
-    <!-- Backstory -->
-    <section class="sheet-section">
-      <h2>Historia</h2>
-      <div class="field-group field-group--full">
-        <label for="personality_traits">Rasgos de Personalidad</label>
-        <textarea id="personality_traits" formControlName="personality_traits" rows="3"></textarea>
+        <div class="panel">
+          <div class="panel-label">Stats calculadas</div>
+          <div class="panel-body">
+            <div class="computed-stats">
+              <div class="stat-chip">
+                <span class="stat-chip__label">Prof. Bonus</span>
+                <span class="stat-chip__value">{{ formatModifier(proficiencyBonus()) }}</span>
+              </div>
+              <div class="stat-chip">
+                <span class="stat-chip__label">Iniciativa</span>
+                <span class="stat-chip__value">{{ formatModifier(initiative()) }}</span>
+              </div>
+              <div class="stat-chip">
+                <span class="stat-chip__label">Perc. Pasiva</span>
+                <span class="stat-chip__value">{{ passivePerception() }}</span>
+              </div>
+              @if (spellSaveDC()) {
+                <div class="stat-chip">
+                  <span class="stat-chip__label">CD Conjuro</span>
+                  <span class="stat-chip__value" style="color: var(--color-accent)">{{ spellSaveDC() }}</span>
+                </div>
+                <div class="stat-chip">
+                  <span class="stat-chip__label">Atq. Conjuro</span>
+                  <span class="stat-chip__value" style="color: var(--color-accent)">{{ formatModifier(spellAttackBonus()!) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
 
-        <label for="ideals">Ideales</label>
-        <textarea id="ideals" formControlName="ideals" rows="3"></textarea>
-
-        <label for="bonds">Vínculos</label>
-        <textarea id="bonds" formControlName="bonds" rows="3"></textarea>
-
-        <label for="flaws">Defectos</label>
-        <textarea id="flaws" formControlName="flaws" rows="3"></textarea>
-
-        <label for="backstory">Historia</label>
-        <textarea id="backstory" formControlName="backstory" rows="6"></textarea>
       </div>
-    </section>
+    }
 
-    <div class="character-sheet__actions">
-      <a routerLink="/characters" class="button button--secondary">Cancelar</a>
-      <button type="submit" class="button button--primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Guardando...' : 'Guardar Personaje' }}
+    <!-- TAB: COMBAT -->
+    @if (activeTab() === 'combat') {
+      <div class="sheet-body">
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-label">Hit Points</div>
+            <div class="panel-body">
+              <div class="hp-bar-wrap">
+                <div class="hp-label">
+                  <span>HP actual / máximo</span>
+                  <span class="hp-val">
+                    {{ form.get('current_hit_points')?.value }} / {{ form.get('max_hit_points')?.value }}
+                  </span>
+                </div>
+                <div class="hp-track">
+                  <div class="hp-fill" [style.width.%]="
+                    form.get('max_hit_points')?.value > 0
+                      ? (form.get('current_hit_points')?.value / form.get('max_hit_points')?.value) * 100
+                      : 0
+                  "></div>
+                </div>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">HP Máximo</span>
+                <input type="number" formControlName="max_hit_points" />
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">HP Actual</span>
+                <input type="number" formControlName="current_hit_points" />
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">HP Temporal</span>
+                <input type="number" formControlName="temporary_hit_points" />
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-label">Defensa y movimiento</div>
+            <div class="panel-body">
+              <div class="stat-row">
+                <span class="stat-label">Clase de Armadura</span>
+                <input type="number" formControlName="armor_class" />
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Velocidad</span>
+                <input type="number" formControlName="speed" readonly />
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Dado de Golpe</span>
+                <input type="text" formControlName="hit_dice" readonly />
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Iniciativa</span>
+                <span class="stat-value green">{{ formatModifier(initiative()) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (selectedClassData()) {
+          <div class="panel">
+            <div class="panel-label">Tiradas de Salvación</div>
+            <div class="panel-body">
+              <div class="saving-throws">
+                @for (ability of abilityNames; track ability) {
+                  @let isProficient = selectedClassData()!.saving_throws.some(st => st.index === ability);
+                  @let modifier = modifiers()[ability] + (isProficient ? proficiencyBonus() : 0);
+                  <div class="saving-throw" [class.saving-throw--proficient]="isProficient">
+                    <div class="saving-throw__dot"></div>
+                    <span class="saving-throw__name">{{ ability.slice(0,3) }}</span>
+                    <span class="saving-throw__value">{{ formatModifier(modifier) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- TAB: SKILLS -->
+    @if (activeTab() === 'skills') {
+      <div class="sheet-body">
+        @if (selectedClassData()) {
+          <div class="panel">
+            <div class="panel-label">Habilidades</div>
+            <div class="panel-body">
+              <app-skills
+                [modifiers]="modifiers()"
+                [proficiencyBonus]="proficiencyBonus()"
+                [classData]="selectedClassData()"
+                [selectedProficiencies]="skillProficiencies()"
+                (proficienciesChange)="onSkillProficienciesChange($event)"
+              />
+            </div>
+          </div>
+        } @else {
+          <div class="panel">
+            <div class="panel-body">
+              <p class="status-msg" style="padding: 0;">▸ Selecciona una clase en la pestaña Info para ver las habilidades.</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB: BACKSTORY -->
+    @if (activeTab() === 'backstory') {
+      <div class="sheet-body">
+        <div class="panel">
+          <div class="panel-label">Historia y personalidad</div>
+          <div class="panel-body">
+            <div class="field-row" style="align-items: flex-start; padding-top: 8px;">
+              <span class="field-label" style="padding-top: 4px;">Rasgos</span>
+              <textarea formControlName="personality_traits" rows="3"></textarea>
+            </div>
+            <div class="field-row" style="align-items: flex-start; padding-top: 8px;">
+              <span class="field-label" style="padding-top: 4px;">Ideales</span>
+              <textarea formControlName="ideals" rows="3"></textarea>
+            </div>
+            <div class="field-row" style="align-items: flex-start; padding-top: 8px;">
+              <span class="field-label" style="padding-top: 4px;">Vínculos</span>
+              <textarea formControlName="bonds" rows="3"></textarea>
+            </div>
+            <div class="field-row" style="align-items: flex-start; padding-top: 8px;">
+              <span class="field-label" style="padding-top: 4px;">Defectos</span>
+              <textarea formControlName="flaws" rows="3"></textarea>
+            </div>
+            <div class="field-row" style="align-items: flex-start; padding-top: 8px;">
+              <span class="field-label" style="padding-top: 4px;">Historia</span>
+              <textarea formControlName="backstory" rows="6"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="sheet-actions">
+      <a routerLink="/characters" class="button--secondary">Cancelar</a>
+      <button type="submit" [disabled]="isSaving()">
+        {{ isSaving() ? '▸ Guardando...' : '◈ Guardar' }}
       </button>
     </div>
 
