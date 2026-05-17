@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TitleCasePipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 
 import { CharacterService } from '../../core/services/character.service';
@@ -13,7 +12,7 @@ import { SkillsComponent } from './sections/skills/skills.component';
 
 @Component({
   selector: 'app-character-sheet',
-  imports: [ReactiveFormsModule, TitleCasePipe, RouterLink, SkillsComponent],
+  imports: [ReactiveFormsModule, RouterLink, SkillsComponent],
   templateUrl: './character-sheet.component.html',
   styleUrl: './character-sheet.component.css'
 })
